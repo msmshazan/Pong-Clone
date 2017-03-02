@@ -45,10 +45,10 @@ void InitializeWall(entity* Wall,r32 X,r32 Y,r32 Width,r32 Height){
 internal
 void RenderEntity(entity *Entity,rectangle2i BufferRect,game_offscreen_buffer* Buffer){
     rectangle2 EntityRect = RectCenterHalfDim(Entity->Pos,Entity->Dim);
-    if(Entity->Dim.x == Entity->Dim.y){
+    if(!(Entity->Dim.x == Entity->Dim.y)){
         DrawRectangle(BufferRect,EntityRect.Min,EntityRect.Max,Buffer,Entity->Color.r,Entity->Color.g,Entity->Color.b);    
     }else{
-        DrawRectangle(BufferRect,EntityRect.Min,EntityRect.Max,Buffer,Entity->Color.r,Entity->Color.g,Entity->Color.b);    
+        DrawFilledCircle(Entity->Pos.x,Entity->Pos.y,Entity->Dim.x,Buffer,Entity->Color.r,Entity->Color.g,Entity->Color.b);    
     }
 }
 
@@ -68,8 +68,10 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
 
 #if 1
-    rectangle2 BufferRect = {{0,0},{Buffer->Width-1,Buffer->Height-1}};
-    rectangle2i _BufferRect = {0,0,(int32)Buffer->Width-1,(int32)Buffer->Height-1};
+    #define OffsetX 0
+    #define OffsetY 100
+    rectangle2 BufferRect = {{OffsetX,OffsetY},{Buffer->Width-1,Buffer->Height-1}};
+    rectangle2i _BufferRect = {OffsetX,OffsetY,(int32)Buffer->Width-1,(int32)Buffer->Height-1};
 #else
     rectangle2 BufferRect = {{0,0},{800,600}};
     rectangle2i _BufferRect = {0,0,800,600};
@@ -127,11 +129,11 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         // NOTE: Walls
         
         GameState->WallTop = CreateEntity(GameState,WallFlag);
-        InitializeWall(GameState->WallTop,BufferRect.Max.x/2,-1,BufferRect.Max.x/2,1);
+        InitializeWall(GameState->WallTop,BufferRect.Max.x/2,BufferRect.Min.y-1,BufferRect.Max.x/2,1);
         GameState->WallBottom = CreateEntity(GameState,WallFlag);
         InitializeWall(GameState->WallBottom,BufferRect.Max.x/2,BufferRect.Max.y + 1,BufferRect.Max.x/2,1);
         GameState->WallLeft = CreateEntity(GameState,WallFlag);
-        InitializeWall(GameState->WallLeft,-1,BufferRect.Max.y/2,1,BufferRect.Max.y/2);
+        InitializeWall(GameState->WallLeft,BufferRect.Min.x-1,BufferRect.Max.y/2,1,BufferRect.Max.y/2);
         GameState->WallRight = CreateEntity(GameState,WallFlag);
         InitializeWall(GameState->WallRight,BufferRect.Max.x + 1 ,BufferRect.Max.y/2,1,BufferRect.Max.x/2);
     }
@@ -203,11 +205,16 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             OldPos = Player->Pos;
             Player->Pos = MoveEntity(Player,Input);
             if(CheckCollision(Player,Ball)|CheckCollision(Player,Enemy)||CheckCollision(Player,WallRight)|CheckCollision(Player,WallLeft)|CheckCollision(Player,WallTop)|CheckCollision(Player,WallBottom))
+            {
                 Player->Pos = OldPos;
+                
+            }
             OldPos = Enemy->Pos;
             Enemy->Pos = MoveEntity(Enemy,Input);
             if(CheckCollision(Enemy,Ball)|CheckCollision(Enemy,Player)|CheckCollision(Enemy,WallRight)|CheckCollision(Enemy,WallLeft)|CheckCollision(Enemy,WallTop)|CheckCollision(Enemy,WallBottom))
+            {
                 Enemy->Pos = OldPos;
+            }
             Ball->Pos = MoveEntity(Ball,Input);
             b32 BallCollided = CheckCollision(Player,Ball)|CheckCollision(Enemy,Ball)|CheckCollision(WallRight,Ball)|CheckCollision(WallLeft,Ball)|CheckCollision(WallTop,Ball)|CheckCollision(WallBottom,Ball);
             if(BallCollided) {

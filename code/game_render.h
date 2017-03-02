@@ -38,7 +38,7 @@ internal void DrawPixel(game_offscreen_buffer* Buffer,real32 X,real32 Y,real32 R
     uint8 *Row = (uint8 *) Buffer->Memory +
         (uint32)X* 4 +
         (uint32)Y * Buffer->Pitch;
-    uint32 *Pixel = (uint32 *)Row;
+    uint32* Pixel = (uint32 *)Row;
     *Pixel = Color;
 }
 

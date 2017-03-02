@@ -39,8 +39,6 @@
 #include "sdllayer.h"
 
 #define GAMEFPS 60
-#define WindowHeight 720
-#define WindowWidth 1280
 
 global_variable bool32 GlobalRunning;
 global_variable bool32 GlobalPause;
@@ -276,18 +274,10 @@ internal void GameRenderOpengl(SDL_Window *window,SDL_Surface *Buffer)
     glEnd();
     SDL_GL_SwapWindow(window);
 }
-#if 0
-int CALLBACK WinMain(HINSTANCE Instance,        
-                     HINSTANCE hPrevInstance,   
-                     LPSTR     lpCmdLine,       
-                     int       nCmdShow){
-
-    return(main(nCmdShow,(char **)lpCmdLine));
-    
-}
-#endif
 int main(int argc, char **argv){
     sdl_state SDLState = {};
+    int WindowHeight = 720;
+    int WindowWidth = 1280;
 
     GlobalPerfCountFrequency = SDL_GetPerformanceFrequency();
 
@@ -317,8 +307,9 @@ int main(int argc, char **argv){
     bmask = 0x00ff0000;
     amask = 0xff000000;
 #endif
-    //SDL_SetWindowFullscreen(Window,SDL_WINDOW_FULLSCREEN_DESKTOP);
-    SDL_Surface *Buffer = SDL_CreateRGBSurface(0,WindowHeight,WindowWidth,32,rmask,gmask,bmask,amask);
+    SDL_SetWindowFullscreen(Window,SDL_WINDOW_FULLSCREEN);
+    SDL_GetWindowSize(Window,&WindowWidth,&WindowHeight);
+    SDL_Surface *Buffer = SDL_CreateRGBSurface(0,WindowWidth,WindowHeight,32,rmask,gmask,bmask,amask);
     game_offscreen_buffer GameBuffer;
     GameBuffer.Memory =Buffer->pixels;
     GameBuffer.Width =(real32)Buffer->w;

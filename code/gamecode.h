@@ -9,7 +9,7 @@
 
 typedef struct game_state{
 
-    entity Entity[7];
+    entity Entity[8];
     entity* Player;
     entity* Enemy;
     entity* Ball;
@@ -17,6 +17,9 @@ typedef struct game_state{
     entity* WallBottom;
     entity* WallLeft;
     entity* WallRight;
+    u32 Scores[4];
+    u32* PlayerScore;
+    u32* EnemyScore;
     
 } game_state;
 
