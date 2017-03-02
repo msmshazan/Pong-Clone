@@ -88,9 +88,9 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         // NOTE: Player 
         GameState->Player= CreateEntity(GameState,PlayerFlag);        
         GameState->Player->Dim.x = 10.0f;
-        GameState->Player->Dim.y = 120.0f;
-        GameState->Player->Pos.x = GameState->Player->Dim.x;
-        GameState->Player->Pos.y = GameState->Player->Dim.y;
+        GameState->Player->Dim.y = 20.0f;
+        GameState->Player->Pos.x = BufferRect.Min.x + GameState->Player->Dim.x;
+        GameState->Player->Pos.y = BufferRect.Min.y + GameState->Player->Dim.y;
         GameState->Player->Color.r= 0.1f;
         GameState->Player->Color.g= 0.1f;
         GameState->Player->Color.b= 0.5f;
@@ -102,9 +102,9 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         
         GameState->Enemy = CreateEntity(GameState,EnemyFlag);    
         GameState->Enemy->Dim.x = 10.0f;
-        GameState->Enemy->Dim.y = 120.0f;
-        GameState->Enemy->Pos.x = Buffer->Width - GameState->Player->Pos.x -GameState->Enemy->Dim.x;
-        GameState->Enemy->Pos.y = Buffer->Height - GameState->Player->Pos.y -GameState->Enemy->Dim.y;
+        GameState->Enemy->Dim.y = 20.0f;
+        GameState->Enemy->Pos.x = BufferRect.Max.x - GameState->Player->Pos.x -GameState->Enemy->Dim.x;
+        GameState->Enemy->Pos.y = BufferRect.Max.y - GameState->Player->Pos.y -GameState->Enemy->Dim.y;
         GameState->Enemy->Color.r= 0.5f;
         GameState->Enemy->Color.g= 0.1f;
         GameState->Enemy->Color.b= 0.1f;
