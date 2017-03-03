@@ -84,15 +84,6 @@ StringLength(const char *String) {
     return Count;
 }
 
-internal void
-SDLBuildEXEPathFileName(sdl_state *State, const char *FileName,
-                        int DestCount, char *Dest)
-{
-    CatStrings(State->OnePastLastEXEFileNameSlash - State->EXEFileName,
-               State->EXEFileName,
-               StringLength(FileName), FileName,
-               DestCount, Dest);
-}
 
 DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile) {
     bool32 Result = false;
@@ -144,6 +135,7 @@ loadgamecode(const char* dllname)
     }
     return (Result);
 }
+
 internal void
 Unloadgamecode(sdl_game_code* Gamecode)
 {
@@ -307,8 +299,8 @@ int main(int argc, char **argv){
     bmask = 0x00ff0000;
     amask = 0xff000000;
 #endif
-    SDL_SetWindowFullscreen(Window,SDL_WINDOW_FULLSCREEN);
-    SDL_GetWindowSize(Window,&WindowWidth,&WindowHeight);
+    //SDL_SetWindowFullscreen(Window,SDL_WINDOW_FULLSCREEN);
+    //SDL_GetWindowSize(Window,&WindowWidth,&WindowHeight);
     SDL_Surface *Buffer = SDL_CreateRGBSurface(0,WindowWidth,WindowHeight,32,rmask,gmask,bmask,amask);
     game_offscreen_buffer GameBuffer;
     GameBuffer.Memory =Buffer->pixels;

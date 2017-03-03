@@ -7,6 +7,124 @@
    $Notice: (C) Copyright 2014 by Molly Rocket, Inc. All Rights Reserved. $
    ======================================================================== */
 
+#include "game_memory.h"
+
+#include "stb_rect_pack.h"
+
+#define STB_IMAGE_IMPLEMENTATION   
+#include "stb_image.h"
+
+#define STB_TRUETYPE_IMPLEMENTATION
+#define STBTT_STATIC 
+#include "stb_truetype.h" // NOTE: Using STB_truetype :  why not?
+
+// NOTE: (TODO):Load fonts as bitmaps because ease
+
+#define BITMAP_BYTES_PER_PIXEL 4
+
+struct loaded_bitmap {
+    void *Memory;
+    s32 Width;
+    s32 Height;
+    // TODO: Get rid of pitch!
+    s32 Pitch;
+};
+
+internal void
+ClearBitmap(loaded_bitmap *Bitmap) {
+    if (Bitmap->Memory) {
+    int32 TotalBitmapSize = Bitmap->Width * Bitmap->Height * BITMAP_BYTES_PER_PIXEL;
+        ZeroSize(TotalBitmapSize, Bitmap->Memory);
+    }
+}
+
+internal loaded_bitmap
+MakeEmptyBitmap(memory_arena *Arena, int32 Width, int32 Height, bool32 ClearToZero = true) {
+    loaded_bitmap Result = {};
+
+    Result.Width = Width;
+    Result.Height = Height;
+    Result.Pitch = Result.Width * BITMAP_BYTES_PER_PIXEL;
+    int32 TotalBitmapSize = Width * Height * BITMAP_BYTES_PER_PIXEL;
+    Result.Memory = PushSize(Arena, TotalBitmapSize, 16);
+    if (ClearToZero) {
+        ClearBitmap(&Result);
+    }
+
+    return Result;
+}
+
+internal loaded_bitmap LoadBitmap(const char* Filename ,memory_arena *Arena){
+    int Width,Height,Bytes_per_pixel;
+    loaded_bitmap Result = {};
+    void *Data = stbi_load(Filename, &Width, &Height, &Bytes_per_pixel,BITMAP_BYTES_PER_PIXEL);
+    if(Data){
+        Result.Width = Width;
+        Result.Height = Height;
+        Result.Pitch = Width*BITMAP_BYTES_PER_PIXEL;
+        memory_index Size = Width*Height*BITMAP_BYTES_PER_PIXEL;
+        Result.Memory =PushCopy(Arena,Size,Data);
+        stbi_image_free(Data);
+    }
+    return Result;
+}
+
+internal void
+DrawBitmap(loaded_bitmap *Buffer, loaded_bitmap *Bitmap,
+           real32 RealX, real32 RealY, real32 Alpha = 1.0)
+{
+
+    int MinX = RoundReal32ToInt32(RealX);
+    int MinY = RoundReal32ToInt32(RealY);
+    int MaxX = MinX + Bitmap->Width;
+    int MaxY = MinY + Bitmap->Height;
+
+    int32 SourceOffsetX = 0;
+    if (MinX < 0) {
+        SourceOffsetX = -MinX;
+        MinX = 0;
+    }
+
+    int32 SourceOffsetY = 0;
+    if (MinY < 0) {
+        SourceOffsetY = -MinY;
+        MinY = 0;
+    }
+
+    if (MaxX > Buffer->Width) {
+        MaxX = Buffer->Width;
+    }
+
+    if (MaxY > Buffer->Height) {
+        MaxY = Buffer->Height;
+    }
+
+    uint8 *SourceRow = (uint8 *)Bitmap->Memory + SourceOffsetY * Bitmap->Pitch + BITMAP_BYTES_PER_PIXEL * SourceOffsetX;
+    uint8 *DestRow = ((uint8 *) Buffer->Memory +
+                      MinX * BITMAP_BYTES_PER_PIXEL +
+                      MinY * Buffer->Pitch);
+    for (int32 Y = MinY; Y < MaxY; ++Y) {
+        uint32 *Dest = (uint32 *) DestRow;
+        uint32 *Source = (uint32 *) SourceRow;
+        for (int32 X = MinX; X < MaxX; ++X) {
+         v4 Result = { (real32)((*Source >> 0) & 0xFF),
+                         (real32)((*Source >> 8) & 0xFF),
+                         (real32)((*Source >> 16) & 0xFF),
+                         (real32)((*Source >> 24) & 0xFF) };
+            
+            *Dest = (((uint32)(Result.a + 0.5f) << 24) |
+                     ((uint32)(Result.r + 0.5f) << 16) |
+                     ((uint32)(Result.g + 0.5f) << 8) |
+                     ((uint32)(Result.b + 0.5f) << 0));
+
+            *Source = (uint32)(RoundReal32ToUInt32(Alpha*255.0f)<<24);
+            ++Dest;
+            ++Source;
+        }
+        DestRow += Buffer->Pitch;
+        SourceRow += Bitmap->Pitch;
+    }
+}
 
 internal void DrawPixel(game_offscreen_buffer* Buffer,real32 X,real32 Y,real32 R,real32 G,real32 B,real32 A=1.0f){
 

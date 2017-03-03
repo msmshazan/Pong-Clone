@@ -67,21 +67,17 @@ extern "C"
 GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
 
-#if 1
-    #define OffsetX 0
-    #define OffsetY 100
-    rectangle2 BufferRect = {{OffsetX,OffsetY},{Buffer->Width-1,Buffer->Height-1}};
-    rectangle2i _BufferRect = {OffsetX,OffsetY,(int32)Buffer->Width-1,(int32)Buffer->Height-1};
-#else
-    rectangle2 BufferRect = {{0,0},{800,600}};
-    rectangle2i _BufferRect = {0,0,800,600};
-#endif
+#define BufferOffsetX 0
+#define BufferOffsetY 100
+    rectangle2 BufferRect = {{BufferOffsetX,BufferOffsetY},{Buffer->Width,Buffer->Height}};
+    rectangle2i _BufferRect = {BufferOffsetX,BufferOffsetY,(int32)Buffer->Width,(int32)Buffer->Height};
     DrawRectangle(_BufferRect,BufferRect.Min,BufferRect.Max,Buffer,0,0,0); // Clear Screen to black
 
     //NOTE: Gamecode comes here
         
     game_state *GameState = (game_state *) Memory->PermanentStorage;
-    
+
+    // NOTE: GameState initialization
     if(!Memory->IsInitialized)
     {
         Memory->IsInitialized = true;
@@ -123,21 +119,30 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         GameState->Ball->Color.g= 0.1f;
         GameState->Ball->Color.b= 0.5f;
         GameState->Ball->dPos = {};
-        GameState->Ball->ddPos.x = 110.0f; 
-        GameState->Ball->ddPos.y = 120.0f;
+        GameState->Ball->ddPos.x = 410.0f; 
+        GameState->Ball->ddPos.y = 420.0f;
 
         // NOTE: Walls
         
         GameState->WallTop = CreateEntity(GameState,WallFlag);
-        InitializeWall(GameState->WallTop,BufferRect.Max.x/2,BufferRect.Min.y-1,BufferRect.Max.x/2,1);
+        InitializeWall(GameState->WallTop,BufferRect.Max.x/2,BufferRect.Min.y-1,BufferRect.Max.x/2 + 1,2);
         GameState->WallBottom = CreateEntity(GameState,WallFlag);
-        InitializeWall(GameState->WallBottom,BufferRect.Max.x/2,BufferRect.Max.y + 1,BufferRect.Max.x/2,1);
+        InitializeWall(GameState->WallBottom,BufferRect.Max.x/2,BufferRect.Max.y + 1,BufferRect.Max.x/2 + 1,2);
         GameState->WallLeft = CreateEntity(GameState,WallFlag);
-        InitializeWall(GameState->WallLeft,BufferRect.Min.x-1,BufferRect.Max.y/2,1,BufferRect.Max.y/2);
+        InitializeWall(GameState->WallLeft,BufferRect.Min.x-1,BufferRect.Max.y/2,2,BufferRect.Max.y/2 +1);
         GameState->WallRight = CreateEntity(GameState,WallFlag);
-        InitializeWall(GameState->WallRight,BufferRect.Max.x + 1 ,BufferRect.Max.y/2,1,BufferRect.Max.x/2);
+        InitializeWall(GameState->WallRight,BufferRect.Max.x + 1 ,BufferRect.Max.y/2,2,BufferRect.Max.x/2+ 1);
     }
 
+    // NOTE: Transient initializition
+    Assert(sizeof(transient_state) <= Memory->TransientStorageSize);
+    transient_state *TranState = (transient_state *) Memory->TransientStorage;
+    if (!TranState->IsInitialized) {
+        InitializeArena(&TranState->TranArena, Memory->TransientStorageSize - sizeof(transient_state),
+                        (uint8 *) Memory->TransientStorage + sizeof(transient_state));
+        TranState->IsInitialized = true;        
+    }
+    
     entity* Player = GameState->Player;
     entity* Enemy = GameState->Enemy;
     entity* Ball = GameState->Ball;
@@ -153,13 +158,13 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     {
         
         // NOTE: Movement Code
-           {
-                //NOTE: Moving the ball...
-               if(AbsoluteValue(Ball->ddPos.x) < 100.0f) Ball->ddPos.x = SignOf(Ball->ddPos.x)*110.f;
-               if(AbsoluteValue(Ball->ddPos.y) < 100.0f) Ball->ddPos.y = SignOf(Ball->ddPos.x)*110.f;
-                Ball->dPos.x = 1.0f;
-                Ball->dPos.y = 1.0f;
-            }
+        {
+            //NOTE: Moving the ball...
+            if(AbsoluteValue(Ball->ddPos.x) < 100.0f) Ball->ddPos.x = SignOf(Ball->ddPos.x)*110.f;
+            if(AbsoluteValue(Ball->ddPos.y) < 100.0f) Ball->ddPos.y = SignOf(Ball->ddPos.x)*110.f;
+            Ball->dPos.x = 1.0f;
+            Ball->dPos.y = 1.0f;
+        }
 
         game_controller_input *Controller = GetController(Input,Controllerindex);
         if(Controller->IsAnalog)
@@ -220,20 +225,20 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             if(BallCollided) {
                 switch (BallCollided){
                     case CollideTop:{
-                    Ball->ddPos.y = -Ball->ddPos.y;
-                    Ball->ddPos.x *= 0.999; 
+                        Ball->ddPos.y = -Ball->ddPos.y;
+                        Ball->ddPos.x *= 0.999; 
                     }break;
                     case CollideBottom:{
-                    Ball->ddPos.y = -Ball->ddPos.y; 
-                    Ball->ddPos.x *= 0.999; 
+                        Ball->ddPos.y = -Ball->ddPos.y; 
+                        Ball->ddPos.x *= 0.999; 
                     }break;
                     case CollideLeft:{
-                    Ball->ddPos.y *= 0.999; 
-                    Ball->ddPos.x = -Ball->ddPos.x; 
+                        Ball->ddPos.y *= 0.999; 
+                        Ball->ddPos.x = -Ball->ddPos.x; 
                     }break;
                     case CollideRight:{
-                    Ball->ddPos.y *= 0.999; 
-                    Ball->ddPos.x = -Ball->ddPos.x; 
+                        Ball->ddPos.y *= 0.999; 
+                        Ball->ddPos.x = -Ball->ddPos.x; 
                     }break;
                     default: break;
                 }
@@ -242,14 +247,26 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             }
         }
     }
-
     // NOTE: Renderer        
     {
+        temporary_memory RenderMemory = BeginTemporaryMemory(&TranState->TranArena);
+        loaded_bitmap TopUI_ = {};
+        loaded_bitmap *TopUI = &TopUI_;
+        TopUI->Width = Buffer->Width;
+        TopUI->Height = BufferOffsetY;
+        TopUI->Pitch = Buffer->Pitch;
+        TopUI->Memory = Buffer->Memory;
+        
+        TranState->Bitmap[0] = LoadBitmap("btn.bmp",&TranState->TranArena);
         RenderEntity(Player,_BufferRect,Buffer);
         RenderEntity(Enemy,_BufferRect,Buffer);
         RenderEntity(Ball,_BufferRect,Buffer);
+        DrawBitmap(TopUI,&TranState->Bitmap[0],0,0);
+        EndTemporaryMemory(RenderMemory);
     }
-    
+     CheckArena(&GameState->Arena);
+    CheckArena(&TranState->TranArena);
+
 }
 
 
