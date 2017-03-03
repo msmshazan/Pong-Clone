@@ -11,6 +11,9 @@
 
 #include "stb_rect_pack.h"
 
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize.h"
+
 #define STB_IMAGE_IMPLEMENTATION   
 #include "stb_image.h"
 
@@ -36,6 +39,18 @@ ClearBitmap(loaded_bitmap *Bitmap) {
     int32 TotalBitmapSize = Bitmap->Width * Bitmap->Height * BITMAP_BYTES_PER_PIXEL;
         ZeroSize(TotalBitmapSize, Bitmap->Memory);
     }
+}
+
+internal void
+ResizeBitmap(loaded_bitmap *InBitmap,int Width,int Height){
+    u8* Dupe = (u8 *)malloc(Width*Height*4);
+    stbir_resize_uint8((u8 *)InBitmap->Memory,InBitmap->Width,InBitmap->Height,0,
+                       Dupe,Width,Height,0,4);
+    Copy(Width*Height*4,Dupe,InBitmap->Memory);
+    InBitmap->Width = Width;
+    InBitmap->Height = Height;
+    free(Dupe);
+    
 }
 
 internal loaded_bitmap

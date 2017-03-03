@@ -1,5 +1,5 @@
 @echo off
-set CompilerFlags= /Z7 /FC /nologo /Od -fp:fast -Gm- -GR- -EHa- /Oi -WX -W4 -wd4189 -wd4505 -wd4100 -wd4456 -wd4244 -wd4201
+set CompilerFlags= /Z7 /FC /nologo /Od -fp:fast -Gm- -GR- -EHa- /Oi -WX -W4 -wd4189 -wd4702 -wd4505 -wd4100 -wd4456 -wd4244 -wd4201
 set LinkerFlags=-subsystem:Console 
 set bits=x64
 set LibraryLocation= ..\deps\lib\%bits%\

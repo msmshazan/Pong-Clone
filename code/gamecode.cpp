@@ -77,6 +77,13 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         
     game_state *GameState = (game_state *) Memory->PermanentStorage;
 
+    loaded_bitmap TopUI_ = {};
+        loaded_bitmap *TopUI = &TopUI_;
+        TopUI->Width = Buffer->Width;
+        TopUI->Height = BufferOffsetY;
+        TopUI->Pitch = Buffer->Pitch;
+        TopUI->Memory = Buffer->Memory;
+        
     // NOTE: GameState initialization
     if(!Memory->IsInitialized)
     {
@@ -140,6 +147,9 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     if (!TranState->IsInitialized) {
         InitializeArena(&TranState->TranArena, Memory->TransientStorageSize - sizeof(transient_state),
                         (uint8 *) Memory->TransientStorage + sizeof(transient_state));
+        TranState->Bitmap[0] = LoadBitmap("btn.bmp",&TranState->TranArena);
+        ResizeBitmap(&TranState->Bitmap[0],TopUI->Width,TopUI->Height);
+        
         TranState->IsInitialized = true;        
     }
     
@@ -250,14 +260,7 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     // NOTE: Renderer        
     {
         temporary_memory RenderMemory = BeginTemporaryMemory(&TranState->TranArena);
-        loaded_bitmap TopUI_ = {};
-        loaded_bitmap *TopUI = &TopUI_;
-        TopUI->Width = Buffer->Width;
-        TopUI->Height = BufferOffsetY;
-        TopUI->Pitch = Buffer->Pitch;
-        TopUI->Memory = Buffer->Memory;
         
-        TranState->Bitmap[0] = LoadBitmap("btn.bmp",&TranState->TranArena);
         RenderEntity(Player,_BufferRect,Buffer);
         RenderEntity(Enemy,_BufferRect,Buffer);
         RenderEntity(Ball,_BufferRect,Buffer);
