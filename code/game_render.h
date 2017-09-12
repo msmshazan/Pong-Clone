@@ -240,6 +240,7 @@ internal void DrawRectangle(rectangle2i ClipRect,v2 vMin,v2 vMax,game_offscreen_
     }
 
 }
+
 #if 0
 void DrawFilledCircle(real32 x0, real32 y0, real32 radius,game_offscreen_buffer* Buffer, real32 R,real32 G,real32 B,real32 A =1.0f)
 {
